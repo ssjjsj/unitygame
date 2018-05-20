@@ -37,7 +37,7 @@ public class NetClient
 
     public void Send(int id, byte[] data)
     {
-        byte[] sendData = MessagePacker.pack(id, data);
+        byte[] sendData = MessagePacker.encode(id, data);
         send(sendData);
     }
 
@@ -108,8 +108,8 @@ public class NetClient
         if (ar.IsCompleted)
         {
             int bodyLength = (int)ar.AsyncState;
-            string messageData = System.BitConverter.ToString(recvBuf, 4, bodyLength);
-            Debug.Log(messageData);
+            MessageData msg = MessagePacker.decode(recvBuf, 4, bodyLength);
+            MessageMgr.Instance().AddMsg(msg);
             NetworkStream stream = client.GetStream();
             stream.BeginRead(recvBuf, 0, 4, new AsyncCallback(recvHeadCallBack), null);
         }
