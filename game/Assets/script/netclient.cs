@@ -10,6 +10,16 @@ public class NetClient
     private byte[] recvBuf = new byte[2048];
     private List<Byte[]> sendList = new List<byte[]>();
 
+	private static NetClient instance;
+
+	public static NetClient Instance()
+	{
+		if (instance == null)
+			instance = new NetClient();
+
+		return instance;
+	}
+
     public void Connect(String server, Int32 port)
     {
         try
