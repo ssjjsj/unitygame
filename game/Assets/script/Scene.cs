@@ -62,8 +62,11 @@ public class Scene
         }
         else
         {
-            Player p = players[data.PlayerId];
-            p.SetPosition(data.PosX, data.PosY);
+			if (data.PlayerId != mainPlayerId)
+			{
+				Player p = players[data.PlayerId];
+				p.SetPosition(data.PosX, data.PosY);
+			}
         }
 
 		Debug.Log("sync player:" + data.PlayerId + " MainPlayer id is:" + mainPlayerId);
@@ -86,5 +89,11 @@ public class Scene
 	public MainPlayer GetMainPlayer()
 	{
 		return mainPlayer;
+	}
+
+
+	public void Update(float deltaTime)
+	{
+		mainPlayer.Update(deltaTime);
 	}
 }

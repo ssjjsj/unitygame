@@ -4,29 +4,32 @@ public class Player
 {
     protected float x;
 	protected float y;
-    private GameObject playerObj;
+    protected GameObject playerObj;
 
     public void Create(int playerId, bool isMainPlayer)
     {
-        GameObject prefab = (GameObject)Resources.Load("prefab/player");
+		string resPath;
+		if (isMainPlayer)
+			resPath = "prefab/player01/player";
+		else
+			resPath = "prefab/player02/player";
+		GameObject prefab = (GameObject)Resources.Load(resPath);
         playerObj = GameObject.Instantiate(prefab);
 		playerObj.name = "player_" + playerId.ToString();
 		if (isMainPlayer)
 			playerObj.name = "mainPlayer";
 
-
-		playerObj.GetComponent<Renderer>().material = (Material)Resources.Load("material/playerMaterial");
-		if (isMainPlayer)
-		{
-			playerObj.GetComponent<Renderer>().material.SetColor("_Color", Color.red);
-		}
-		else
-		{
-			playerObj.GetComponent<Renderer>().material.SetColor("_Color", Color.blue);
-		}
+		onCreate();
     }
 
-    public void SetPosition(float x, float y)
+
+	protected virtual void onCreate()
+	{
+
+	}
+
+
+	public void SetPosition(float x, float y)
     {
 		this.x = x;
 		this.y = y;
