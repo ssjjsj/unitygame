@@ -8,8 +8,5 @@ public class InputManager : MonoBehaviour
 {
 	public void Update()
 	{
-
-
-
 	}
 }

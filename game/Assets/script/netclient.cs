@@ -101,7 +101,11 @@ public class NetClient
         if (ar.IsCompleted)
         {
             NetworkStream stream = client.GetStream();
-            int length = System.BitConverter.ToInt32(recvBuf, 0);
+			byte[] lengthdata = new byte[4];
+			Array.Copy(recvBuf, 0, lengthdata, 0, 4);
+			if (System.BitConverter.IsLittleEndian == false)
+				Array.Reverse(lengthdata);
+            int length = System.BitConverter.ToInt32(lengthdata, 0);
 
             stream.BeginRead(recvBuf, 4, length, new AsyncCallback(recvBodyCallBack), length);
         }

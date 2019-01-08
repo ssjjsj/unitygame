@@ -5,14 +5,8 @@ using System.Text;
 public class MainPlayer : Player
 {
 	public int playerId;
-	public bool needMove = false;
-	public float minDelta = 0.01f;
-	public float speed = 1.0f;
 	private Animator animatiorController;
-	float deltaX;
-	float deltaY;
-	Vector3 moveDelta;
-
+	private MoveCompent moveCompent;
 
 	public class SyncPos
 	{
@@ -20,7 +14,8 @@ public class MainPlayer : Player
 		public int PlayerId;
 		public int PosX;
 		public int PosY;
-		public string TimeStep;
+		public int TimeStamp;
+		public float[] Rotation;
 	}
 
 	protected override void onCreate()
@@ -29,18 +24,26 @@ public class MainPlayer : Player
 		controller.SetTarget(playerObj);
 
 		animatiorController = playerObj.GetComponent<Animator>();
+		moveCompent = playerObj.AddComponent<MoveCompent>();
 	}
 
 
-	public void Move(float deltax, float deltay)
+	public void Move(float deltax, float deltay, Quaternion rotation, bool needMove)
 	{
-		this.deltaX = deltax;
-		this.deltaY = deltay;
-		this.x = this.x + deltax;
-		this.y = this.y + deltay;
+		if (needMove)
+		{
+			this.x = this.x + deltax;
+			this.y = this.y + deltay;
 
-		onStartMove();
-		syncToServer();
+			onStartMove();
+			syncToServer();
+
+			moveCompent.MoveImmediately(rotation, new Vector3(this.x, 0.0f, this.y));
+		}
+		else
+		{
+			onEndMove();
+		}
 	}
 
 
@@ -50,10 +53,17 @@ public class MainPlayer : Player
 		data.PosX = (int)x;
 		data.PosY = (int)y;
 		data.Module = "scene";
-		data.TimeStep = "0";
+		data.TimeStamp = GameTime.GetTimeStamp();
 		data.PlayerId = playerId;
+		Quaternion rotation = playerObj.transform.rotation;
+		data.Rotation = new float[4];
+		data.Rotation[0] = rotation.x;
+		data.Rotation[1] = rotation.y;
+		data.Rotation[2] = rotation.z;
+		data.Rotation[3] = rotation.w;
 
 		string tdata = JsonUtility.ToJson(data);
+		Debug.Log("sync data:" + tdata);
 		byte[] bytes = Encoding.ASCII.GetBytes(tdata);
 		NetClient.Instance().Send(proto.C2S_SYNCPOS, bytes);
 	}
@@ -61,7 +71,6 @@ public class MainPlayer : Player
 
 	void onStartMove()
 	{
-		needMove = true;
 		animatiorController.SetBool("idel", false);
 		animatiorController.SetBool("run", true);
 	}
@@ -69,54 +78,7 @@ public class MainPlayer : Player
 
 	void onEndMove()
 	{
-		Debug.Log("end run");
 		animatiorController.SetBool("idel", true);
 		animatiorController.SetBool("run", false);
-	}
-
-
-	public void Update(float deltaTime)
-	{
-		if (needMove)
-		{
-			needMove = false;
-			float delta = deltaTime * speed;
-			moveDelta.y = 0.0f;
-			if (deltaX < 0 && deltaX > -minDelta)
-			{
-				deltaX += delta;
-				moveDelta.x = -delta;
-				needMove = true;
-			}
-			else if (deltaX> 0 && deltaX > minDelta)
-			{
-				deltaX -= delta;
-				moveDelta.x = delta;
-				needMove = true;
-			}
-
-
-			if (deltaY < 0 && deltaY > -minDelta)
-			{
-				deltaY += delta;
-				moveDelta.z = -delta;
-				needMove = true;
-			}
-			else if (deltaY > 0 && deltaY > minDelta)
-			{
-				deltaY -= delta;
-				moveDelta.z = delta;
-				needMove = true;
-			}
-
-			if (needMove)
-			{
-				playerObj.transform.position += moveDelta;
-			}
-			else
-			{
-				onEndMove();
-			}
-		}
 	}
 }

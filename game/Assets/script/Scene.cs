@@ -13,7 +13,8 @@ public class Scene
 		public int PosX;
 		public int PosY;
 		public int PlayerId;
-		public string TimeStep;
+		public int TimeStep;
+		public float[] Rotation;
 	}
 
 	[UnityEngine.SerializeField]
@@ -41,7 +42,7 @@ public class Scene
 
     public void AddNewPalyer(int id, float x, float y)
     {
-        Player p = new Player();
+        RemotePlayer p = new RemotePlayer();
 		p.Create(id, false);
         players[id] = p;
     }
@@ -56,6 +57,7 @@ public class Scene
     public void onSync(MessageData jsonData)
     {
         sysncData data = (sysncData)UnityEngine.JsonUtility.FromJson(jsonData.data, typeof(sysncData));
+		Debug.Log(jsonData.data);
         if (players.ContainsKey(data.PlayerId) == false)
         {
             AddNewPalyer(data.PlayerId, data.PosX, data.PosY);
@@ -65,7 +67,9 @@ public class Scene
 			if (data.PlayerId != mainPlayerId)
 			{
 				Player p = players[data.PlayerId];
-				p.SetPosition(data.PosX, data.PosY);
+				RemotePlayer remotePlayer = (RemotePlayer)p;
+				Quaternion q = new Quaternion(data.Rotation[0], data.Rotation[1], data.Rotation[2], data.Rotation[3]);
+				remotePlayer.Sync(data.PosX, data.PosY, data.TimeStep, q);
 			}
         }
 
@@ -89,11 +93,5 @@ public class Scene
 	public MainPlayer GetMainPlayer()
 	{
 		return mainPlayer;
-	}
-
-
-	public void Update(float deltaTime)
-	{
-		mainPlayer.Update(deltaTime);
 	}
 }
