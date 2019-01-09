@@ -5,8 +5,9 @@ public class Player
     protected float x;
 	protected float y;
     protected GameObject playerObj;
+	protected Animator animatiorController;
 
-    public void Create(int playerId, bool isMainPlayer)
+	public void Create(int playerId, bool isMainPlayer)
     {
 		string resPath;
 		if (isMainPlayer)
@@ -29,10 +30,29 @@ public class Player
 	}
 
 
+	public virtual void Update()
+	{
+
+	}
+
+
 	public void SetPosition(float x, float y)
     {
 		this.x = x;
 		this.y = y;
-        playerObj.transform.position = new Vector3(x, 1, y);
+	}
+
+
+	protected void onStartMove()
+	{
+		animatiorController.SetBool("idel", false);
+		animatiorController.SetBool("run", true);
+	}
+
+
+	protected void onEndMove()
+	{
+		animatiorController.SetBool("idel", true);
+		animatiorController.SetBool("run", false);
 	}
 }

@@ -18,6 +18,14 @@ public class Scene
 	}
 
 	[UnityEngine.SerializeField]
+	class SysncState
+	{
+		public string State;
+		public int PlayerId;
+		public int TimeStep;
+	}
+
+	[UnityEngine.SerializeField]
 	class syncNewPlayer
 	{
 		public int PlayerId;
@@ -33,6 +41,10 @@ public class Scene
         MessageMgr.Instance().AddAction(proto.S2C_SYNCPOS, new System.Action<MessageData>(x => {
             onSync(x);
         }));
+
+		MessageMgr.Instance().AddAction(proto.S2C_SYNCSTATE, new System.Action<MessageData>(x => {
+			onSyncState(x);
+		}));
 
 
 		MessageMgr.Instance().AddAction(proto.S2C_ADDMAINPLAYER, new System.Action<MessageData>(x => {
@@ -54,10 +66,25 @@ public class Scene
     }
 
 
-    public void onSync(MessageData jsonData)
+	public void onSyncState(MessageData jsonData)
+	{
+		SysncState data = (SysncState)UnityEngine.JsonUtility.FromJson(jsonData.data, typeof(SysncState));
+		if (players.ContainsKey(data.PlayerId))
+		{
+			if (data.PlayerId != mainPlayerId)
+			{
+				RemotePlayer player = players[data.PlayerId] as RemotePlayer;
+				player.SyncState(data.State, data.TimeStep);
+			}
+		}
+	}
+
+
+
+	public void onSync(MessageData jsonData)
     {
         sysncData data = (sysncData)UnityEngine.JsonUtility.FromJson(jsonData.data, typeof(sysncData));
-		Debug.Log(jsonData.data);
+		//Debug.Log(jsonData.data);
         if (players.ContainsKey(data.PlayerId) == false)
         {
             AddNewPalyer(data.PlayerId, data.PosX, data.PosY);
@@ -73,7 +100,7 @@ public class Scene
 			}
         }
 
-		Debug.Log("sync player:" + data.PlayerId + " MainPlayer id is:" + mainPlayerId);
+		//Debug.Log("sync player:" + data.PlayerId + " MainPlayer id is:" + mainPlayerId);
     }
 
 
@@ -93,5 +120,14 @@ public class Scene
 	public MainPlayer GetMainPlayer()
 	{
 		return mainPlayer;
+	}
+
+
+	public void Update()
+	{
+		foreach (int playerId in players.Keys)
+		{
+			players[playerId].Update();
+		}
 	}
 }

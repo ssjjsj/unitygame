@@ -25,16 +25,12 @@ public class NetClient
         try
         {
             this.client = new TcpClient();
-            client.Connect(new System.Net.IPEndPoint(System.Net.IPAddress.Parse("127.0.0.1"), port));
+            client.Connect(new System.Net.IPEndPoint(System.Net.IPAddress.Parse(server), port));
             this.startRecv();
         }
         catch (ArgumentNullException e)
         {
-            Console.WriteLine("ArgumentNullException: {0}", e);
-        }
-        catch (SocketException e)
-        {
-            Console.WriteLine("SocketException: {0}", e);
+            Debug.Log(string.Format("ArgumentNullException: {0}", e));
         }
     }
 

@@ -7,7 +7,7 @@ public class GameMain : MonoBehaviour {
 	private Scene mainScene;
 	// Use this for initialization
 	void Start () {
-        NetClient.Instance().Connect("127.0.0.1", 3014);
+        NetClient.Instance().Connect("192.168.100.63", 3014);
         mainScene = new Scene();
 		mainScene.Init();
 	}
@@ -21,7 +21,7 @@ public class GameMain : MonoBehaviour {
 		bool back = false;
 		bool right = false;
 		bool left = false;
-		float speed = 0.01f;
+		float speed = 0.05f;
 		float deltaX = 0.0f;
 		float deltaY = 0.0f;
 
@@ -47,6 +47,28 @@ public class GameMain : MonoBehaviour {
 		{
 			right = true;
 		}
+
+//#if UNITY_STANDALONE_WIN
+//				int rand = Random.Range(0, 5);
+//		if (rand == 0)
+//			forward = true;
+//		else if (rand == 1)
+//			back = true;
+//		else if (rand == 2)
+//			right = true;
+//		else if (rand == 3)
+//			left = true;
+//		else if (rand == 4)
+//		{
+//			forward = true;
+//			right = true;
+//		}
+//		else
+//		{
+//			forward = true;
+//			left = true;
+//		}	
+//#endif
 
 		float angle;
 		if (forward)
@@ -115,9 +137,13 @@ public class GameMain : MonoBehaviour {
 		}
 
 		Quaternion rotation = Quaternion.AngleAxis(angle, new Vector3(0.0f, 1.0f, 0.0f));
-
 		if (mainScene != null && mainScene.GetMainPlayer() != null)
-			mainScene.GetMainPlayer().Move(deltaX*speed, deltaY*speed, rotation, needMove);
+		{
+			mainScene.GetMainPlayer().Move(deltaX * speed, deltaY * speed, rotation, needMove);
+		}
+
+
+		mainScene.Update();
 	}
 
 

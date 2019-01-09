@@ -5,8 +5,10 @@ using System.Text;
 public class MainPlayer : Player
 {
 	public int playerId;
-	private Animator animatiorController;
+	private float deltaTimeSinceLastUpdate = 0.0f;
 	private MoveCompent moveCompent;
+	private bool needSync = false;
+	private string curState = "";
 
 	public class SyncPos
 	{
@@ -16,6 +18,15 @@ public class MainPlayer : Player
 		public int PosY;
 		public int TimeStamp;
 		public float[] Rotation;
+	}
+
+
+	public class SyncState
+	{
+		public string Module;
+		public int PlayerId;
+		public string State;
+		public int TimeStamp;
 	}
 
 	protected override void onCreate()
@@ -32,18 +43,46 @@ public class MainPlayer : Player
 	{
 		if (needMove)
 		{
+			needSync = true;
 			this.x = this.x + deltax;
 			this.y = this.y + deltay;
 
-			onStartMove();
-			syncToServer();
+			if (curState != "run")
+			{
+				curState = "run";
+				syncStateToServer("run");
+				onStartMove();
+			}
+
 
 			moveCompent.MoveImmediately(rotation, new Vector3(this.x, 0.0f, this.y));
 		}
 		else
 		{
-			onEndMove();
+			if (curState != "idel")
+			{
+				syncStateToServer("idel");
+				onEndMove();
+				curState = "idel";
+			}
 		}
+	}
+
+
+	private void syncStateToServer(string state)
+	{
+		SyncState data = new SyncState();
+		data.Module = "scene";
+		data.TimeStamp = GameTime.GetTimeStamp();
+		data.PlayerId = playerId;
+		data.State = state;
+
+		string tdata = JsonUtility.ToJson(data);
+		//Debug.Log("sync data:" + tdata);
+		byte[] bytes = Encoding.ASCII.GetBytes(tdata);
+		NetClient.Instance().Send(proto.C2S_SYNCSTATE, bytes);
+
+		needSync = false;
 	}
 
 
@@ -63,22 +102,24 @@ public class MainPlayer : Player
 		data.Rotation[3] = rotation.w;
 
 		string tdata = JsonUtility.ToJson(data);
-		Debug.Log("sync data:" + tdata);
+		//Debug.Log("sync data:" + tdata);
 		byte[] bytes = Encoding.ASCII.GetBytes(tdata);
 		NetClient.Instance().Send(proto.C2S_SYNCPOS, bytes);
 	}
 
 
-	void onStartMove()
+	public override void Update()
 	{
-		animatiorController.SetBool("idel", false);
-		animatiorController.SetBool("run", true);
-	}
+		if (needSync == false)
+			return;
 
+		deltaTimeSinceLastUpdate += Time.deltaTime*1000;
 
-	void onEndMove()
-	{
-		animatiorController.SetBool("idel", true);
-		animatiorController.SetBool("run", false);
+		if (deltaTimeSinceLastUpdate > 1000.0f/33.0f)
+		{
+			syncToServer();
+			deltaTimeSinceLastUpdate = 0.0f;
+			//Debug.Log("sync to server");
+		} 
 	}
 }
